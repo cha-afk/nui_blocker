@@ -3,10 +3,7 @@ function ExtractIdentifiers(src)
     local identifiers = {
         steam = "",
         ip = "",
-        discord = "",
-        license = "",
-        xbl = "",
-        live = ""
+        discord = ""
     }
 
     for i = 0, GetNumPlayerIdentifiers(src) - 1 do
@@ -18,19 +15,13 @@ function ExtractIdentifiers(src)
             identifiers.ip = id
         elseif string.find(id, "discord") then
             identifiers.discord = id
-        elseif string.find(id, "license") then
-            identifiers.license = id
-        elseif string.find(id, "xbl") then
-            identifiers.xbl = id
-        elseif string.find(id, "live") then
-            identifiers.live = id
         end
     end
 
     return identifiers
 end
 
-local logs = "your-webhook-here"
+local logs = "YOUR-WEBHOOK HERE"
 
 local kick_msg = "Hmm, what you wanna do in this inspector?"
 local discord_msg = '`Player try to use nui_devtools`\n`and he got a kick`\n`ANTI NUI_DEVTOOLS`'
@@ -46,7 +37,7 @@ function sendToDiscord (source,message,color,identifier)
         {
             ["color"] = color,
             ["title"] = message,
-            ["description"] = "`Player`: **"..name.."**\nSteam: **"..identifier.steam.."** \nIP: **"..identifier.ip.."**\nDiscord: **"..identifier.discord.."**\nFivem: **"..identifier.license.."**",
+            ["description"] = "Steam: **"..identifier.steam.."** \nIP: **"..identifier.ip.."**\nDiscord: **"..identifier.discord.."**",
             ["footer"] = {
                 ["text"] = "© QamarQ & vjuton - "..os.date("%x %X %p")
             },
@@ -56,10 +47,14 @@ function sendToDiscord (source,message,color,identifier)
     PerformHttpRequest(logs, function(err, text, headers) end, 'POST', json.encode({username = "YourRP - Anti nui_devtools", embeds = sendD}), { ['Content-Type'] = 'application/json' })
 end
 
+local checkedPlayers = {}
 
 RegisterServerEvent(GetCurrentResourceName())
 AddEventHandler(GetCurrentResourceName(), function()
     local _source = source
+    
+    if checkedPlayers[_source] then return end
+    
     local identifier = ExtractIdentifiers(_source)
     local identifierDb
     if extendedVersionV1Final then
@@ -67,23 +62,45 @@ AddEventHandler(GetCurrentResourceName(), function()
     else
         identifierDb = identifier.steam
     end
+
     if checkmethod == 'steam' then
-	if json.encode(allowlist) == "[]" then
-	   sendToDiscord (_source, discord_msg, color_msg,identifier)
-           DropPlayer(_source, kick_msg)		
-	end
-	for _, v in pairs(allowlist) do
-           if v ~= identifierDb then
-	      sendToDiscord (_source, discord_msg, color_msg,identifier)
-              DropPlayer(_source, kick_msg)
-           end
+        if json.encode(allowlist) == "[]" then
+            sendToDiscord (_source, discord_msg, color_msg, identifier)
+            DropPlayer(_source, kick_msg)
+            return
         end
-     elseif checkmethod == 'SQL' then
-        MySQL.Async.fetchAll("SELECT group FROM users WHERE identifier = @identifier",{['@identifier'] = identifierDb }, function(results) 
-            if results[1].group ~= 'admin' or 'superadmin' then
-               sendToDiscord (source, discord_msg, color_msg,identifier)
-               DropPlayer(source, kick_msg)
+        
+        local isAllowed = false
+        for _, v in pairs(allowlist) do
+            if v == identifierDb then
+                isAllowed = true
+                break
             end
+        end
+        
+        if not isAllowed then
+            sendToDiscord (_source, discord_msg, color_msg, identifier)
+            DropPlayer(_source, kick_msg)
+            return
+        end
+        
+    elseif checkmethod == 'SQL' then
+        MySQL.Async.fetchAll("SELECT group FROM characters WHERE identifier = @identifier",{['@identifier'] = identifierDb }, function(results) 
+            if not results[1] or (results[1].group ~= 'admin' and results[1].group ~= 'moderator') then
+                sendToDiscord (_source, discord_msg, color_msg, identifier)
+                DropPlayer(_source, kick_msg)
+                return
+            end
+            checkedPlayers[_source] = true
         end)
-     end
+    end
+    
+    if checkmethod == 'steam' then
+        checkedPlayers[_source] = true
+    end
+end)
+
+AddEventHandler('playerDropped', function()
+    local _source = source
+    checkedPlayers[_source] = nil
 end)

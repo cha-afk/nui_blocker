@@ -10,6 +10,5 @@ extendedVersionV1Final = false
 --allow admin and superadmin to open nui_devtool 
 
 allowlist = {
-'steam:110000135910727',
-'steam:11000011C0FDDBE'
+-- 'steam:11d0000a1139dd1e09a'
 }

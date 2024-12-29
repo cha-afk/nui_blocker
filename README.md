@@ -1,7 +1,3 @@
-# DEPRECATED. USE THIS REPO TO LEARN. <br/>ALWAYS SECURE CODE ON BACKEND!
-
-<img width="150" height="150" align="left" style="float: left; margin: 0 10px 0 0; z-index: 10;" alt="qamarq" src="https://i.imgur.com/IRySH8e.png">  
-
 # nui_blocker - qamarq
 **[PL]**
 NUI Devtools to narzędzie developerskie ułatwiające robienie skryptów w HTML i JS. Nie stety wielu ludzi wykorzystuje to do nie właściwych celów.
@@ -27,6 +23,10 @@ This script will allow you to successfully block people who have the dev tools c
 4. Done
 
 
+
+# Authors
+
+qamarq#5665
 
 # LICENSE
 **[PL]**
